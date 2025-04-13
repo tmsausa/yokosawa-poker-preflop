@@ -37,16 +37,19 @@
             const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
             const hands = [];
             
-            // ペアハンド (例: AA, KK)
+            // すべてのハンドタイプを生成（表示するためだけなので効率的に）
             for (let i = 0; i < ranks.length; i++) {
-              hands.push(`${ranks[i]}${ranks[i]}`);
-            }
-            
-            // スーテッドとオフスートのハンド
-            for (let i = 0; i < ranks.length; i++) {
-              for (let j = i + 1; j < ranks.length; j++) {
-                hands.push(`${ranks[i]}${ranks[j]}s`); // スーテッド
-                hands.push(`${ranks[j]}${ranks[i]}o`); // オフスート
+              for (let j = 0; j < ranks.length; j++) {
+                if (i === j) {
+                  // ペア (例: AA, KK)
+                  hands.push(`${ranks[i]}${ranks[j]}`);
+                } else if (i < j) {
+                  // スーテッド (例: AKs)
+                  hands.push(`${ranks[i]}${ranks[j]}s`);
+                } else {
+                  // オフスート (例: KAo)
+                  hands.push(`${ranks[j]}${ranks[i]}o`);
+                }
               }
             }
             
@@ -98,7 +101,11 @@
               gray: '#888888'
             };
 
-            return { backgroundColor: colorMap[color], color: ['navy', 'red', 'green', 'gray'].includes(color) ? 'white' : 'black' };
+            return { 
+              backgroundColor: colorMap[color], 
+              color: ['navy', 'red', 'green', 'gray'].includes(color) ? 'white' : 'black',
+              border: '1px solid #666' // すべてのセルに枠線を追加
+            };
           };
 
           // テーブルを作成
@@ -159,9 +166,13 @@
                 newRevealedHands[hand] = true;
               });
               setRevealedHands(newRevealedHands);
+              
+              // デバッグ用
+              console.log(`全${allHands.length}ハンドを表示しました`);
             } else {
               // すべて非表示
               setRevealedHands({});
+              console.log('すべてのハンドを非表示にしました');
             }
           };
 
