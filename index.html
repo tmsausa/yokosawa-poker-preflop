@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポーカーハンドレンジアプリ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Your React Component -->
+    <script type="text/babel">
+        // Paste the React component code here
+        const { useState } = React;
+
+        const PokerHandRangeApp = () => {
+          // ハンドカテゴリーの定義と色の指定
+          const handCategories = {
+            navy: ['AA', 'AKs', 'AKo', 'KK', 'QQ'],
+            red: ['AQs', 'AJs', 'ATs', 'AQo', 'KQs', 'JJ', 'TT', '99'],
+            orange: ['AJo', 'KQo', 'KJs', 'QJs', 'JTs', '88', '77'],
+            green: ['ATo', 'KJo', 'KTs', 'QTs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s', 'K9s', 'T9s', '66', '55'],
+            skyblue: ['A9o', 'KTo', 'QJo', 'JTo', 'Q9s', 'J9s', 'T8s', '98s', '44', '33', '22'],
+            lightgray: ['A8o', 'A7o', 'K9o', 'QTo', 'Q9o', 'J9o', 'T9o', 'K8s', 'K7s', 'K6s', 'K5s', 'K4s', 'K3s', 'K2s', 'Q8s', 'Q7s', 'Q6s', 'J8s', 'J7s', 'J6s', '97s', '87s', '76s', '65s'],
+            purpleOutline: ['A6o', '98o', 'T7s', 'J6s', '96s', '86s', 'Q5s', 'Q4s', 'Q3s', 'Q2s', '75s', '64s', '54s'],
+          };
+
+          // すべてのポーカーハンドを生成
+          const generateAllHands = () => {
+            const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+            const hands = [];
+            
+            // ペアハンド (例: AA, KK)
+            for (let i = 0; i < ranks.length; i++) {
+              hands.push(`${ranks[i]}${ranks[i]}`);
+            }
+            
+            // スーテッドとオフスートのハンド
+            for (let i = 0; i < ranks.length; i++) {
+              for (let j = i + 1; j < ranks.length; j++) {
+                hands.push(`${ranks[i]}${ranks[j]}s`); // スーテッド
+                hands.push(`${ranks[j]}${ranks[i]}o`); // オフスート
+              }
+            }
+            
+            return hands;
+          };
+
+          // ハンドの色を決定する関数
+          const getHandColor = (hand) => {
+            for (const [color, hands] of Object.entries(handCategories)) {
+              if (hands.includes(hand)) {
+                return color;
+              }
+            }
+            return "gray"; // デフォルト色
+          };
+
+          // 初期状態では全てのハンドが非表示
+          const [revealedHands, setRevealedHands] = useState({});
+
+          // ハンドをクリックしたときの処理
+          const toggleHandReveal = (hand) => {
+            setRevealedHands(prev => ({
+              ...prev,
+              [hand]: !prev[hand]
+            }));
+          };
+
+          // ハンドの表示スタイルを決定
+          const getHandStyle = (hand) => {
+            if (!revealedHands[hand]) {
+              return { backgroundColor: '#f0f0f0', border: '1px solid #ccc' };
+            }
+
+            const color = getHandColor(hand);
+            if (color === 'purpleOutline') {
+              return { 
+                backgroundColor: '#aaa', 
+                border: '3px solid purple'
+              };
+            }
+
+            const colorMap = {
+              navy: '#000080',
+              red: '#cc0000',
+              orange: '#ff8c00',
+              green: '#008000',
+              skyblue: '#87ceeb',
+              lightgray: '#d3d3d3',
+              gray: '#888888'
+            };
+
+            return { backgroundColor: colorMap[color], color: ['navy', 'red', 'green', 'gray'].includes(color) ? 'white' : 'black' };
+          };
+
+          // テーブルを作成
+          const createTable = () => {
+            const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+            const rows = [];
+
+            // ヘッダー行
+            const headerCells = [<th key="corner" className="text-center p-2 border"></th>];
+            ranks.forEach(rank => {
+              headerCells.push(
+                <th key={rank} className="text-center p-2 border w-12">{rank}</th>
+              );
+            });
+            rows.push(<tr key="header">{headerCells}</tr>);
+
+            // データ行
+            ranks.forEach((row, rowIndex) => {
+              const cells = [
+                <th key={`row-${row}`} className="text-center p-2 border">{row}</th>
+              ];
+
+              ranks.forEach((col, colIndex) => {
+                let hand;
+                if (rowIndex === colIndex) {
+                  hand = `${row}${col}`; // ペア
+                } else if (rowIndex < colIndex) {
+                  hand = `${row}${col}s`; // スーテッド
+                } else {
+                  hand = `${col}${row}o`; // オフスート
+                }
+
+                cells.push(
+                  <td 
+                    key={`${row}-${col}`} 
+                    className="text-center p-2 border cursor-pointer" 
+                    style={getHandStyle(hand)}
+                    onClick={() => toggleHandReveal(hand)}
+                  >
+                    {hand}
+                  </td>
+                );
+              });
+
+              rows.push(<tr key={`row-${rowIndex}`}>{cells}</tr>);
+            });
+
+            return rows;
+          };
+
+          // すべてのハンドを表示/非表示にする
+          const toggleAllHands = () => {
+            if (Object.keys(revealedHands).length === 0 || !Object.values(revealedHands).some(val => val === true)) {
+              // すべて表示
+              const allHands = generateAllHands();
+              const newRevealedHands = {};
+              allHands.forEach(hand => {
+                newRevealedHands[hand] = true;
+              });
+              setRevealedHands(newRevealedHands);
+            } else {
+              // すべて非表示
+              setRevealedHands({});
+            }
+          };
+
+          return (
+            <div className="flex flex-col items-center p-4">
+              <h1 className="text-2xl font-bold mb-4">ポーカーハンドレンジチャート</h1>
+              <p className="mb-4">セルをクリックすると色が表示されます</p>
+              
+              <button 
+                className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={toggleAllHands}
+              >
+                {Object.keys(revealedHands).length > 0 && Object.values(revealedHands).some(val => val === true) 
+                  ? "すべて非表示" 
+                  : "すべて表示"}
+              </button>
+              
+              <div className="overflow-x-auto w-full">
+                <table className="border-collapse">
+                  <tbody>
+                    {createTable()}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 border rounded">
+                  <h3 className="font-bold mb-2">凡例:</h3>
+                  <ul>
+                    <li style={{color: '#000080', fontWeight: 'bold'}}>紺色：AA, AKs, AKo, KK, QQ</li>
+                    <li style={{color: '#cc0000', fontWeight: 'bold'}}>赤色：AQs, AJs, ATs, AQo, KQs, JJ, TT, 99</li>
+                    <li style={{color: '#ff8c00'}}>オレンジ色：AJo, KQo, KJs, QJs, JTs, 88, 77</li>
+                    <li style={{color: '#008000', fontWeight: 'bold'}}>緑色：ATo, KJo, KTs, QTs, A9s-A2s, K9s, T9s, 66, 55</li>
+                    <li style={{color: '#87ceeb'}}>水色：A9o, KTo, QJo, JTo, Q9s, J9s, T8s, 98s, 44, 33, 22</li>
+                    <li>白色：A8o, A7o, K9o, QTo, Q9o, J9o, T9o, K8s-K2s, Q8s-Q6s, J7s-J6s, 97s, 87s, 76s, 65s</li>
+                    <li style={{border: '2px solid purple', padding: '0 3px'}}>紫枠：A6o, 98o, T7s, J6s, 96s, 86s, Q5s-Q2s, 75s, 64s, 54s</li>
+                    <li style={{color: '#888888'}}>グレー：その他</li>
+                  </ul>
+                </div>
+                
+                <div className="p-4 border rounded">
+                  <h3 className="font-bold mb-2">使い方:</h3>
+                  <ul className="list-disc pl-5">
+                    <li>個別のセルをクリックして、そのハンドの評価カテゴリーを確認</li>
+                    <li>「すべて表示」ボタンで全ハンドの色を一度に表示</li>
+                    <li>「すべて非表示」ボタンで全ハンドの色を非表示に</li>
+                    <li>s = スーテッド (同じスート)</li>
+                    <li>o = オフスート (異なるスート)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // レンダリング
+        ReactDOM.render(<PokerHandRangeApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
